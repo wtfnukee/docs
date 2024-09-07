@@ -1,29 +1,81 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+name: Build and Deploy Docs to Pages
 
 on:
-  # Runs on pushes targeting the default branch
   push:
     branches: ["master"]
 
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
-  # Single deploy job since we're just deploying
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - run: npm i @diplodoc/cli -g
+        shell: bash
+
+      - name: Build md2html
+        id: build-md2html
+        run: |
+          set +e
+          set -o pipefail
+
+          yfm -i ./docs -o ./_docs-lint | tee './build-html.log'
+
+          echo "exitcode=$?" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Save inputs
+        run: |
+          mkdir -p ./inputs
+          echo ${{ github.sha }} > ./inputs/revision
+          echo ${{ github.event.number }} > ./inputs/pr-number
+        shell: bash
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-output-md
+          include-hidden-files: true
+          path: ./_docs-build
+          retention-days: 1
+
+      - name: Upload build log
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-log-html
+          path: ./build-html.log
+          retention-days: 1
+
+      - name: Exit
+        run: |
+          exitcode=${{ steps.build-md2html.outputs.exitcode }}
+
+          if [ "$exitcode" -eq 0 ]; then
+              echo "Build exited successfully."
+          else
+            echo "Build exited with an error. Exit code: $exitcode"
+            exit $exitcode
+          fi
+        shell: bash
+
   deploy:
+    needs: build
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -31,17 +83,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-output-md
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
-      - name: Build Docs
-        uses: ./.github/workflows/docs-build-action.yaml
-        with:
-          src-root: './' 
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
-          path: '.'
+          path: './_docs-build'
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
