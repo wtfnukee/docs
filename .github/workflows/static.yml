@@ -34,7 +34,7 @@ jobs:
         run: |
           set +e
           set -o pipefail
-          yfm -i ./ -o ./github-docs | tee './build-html.log'
+          yfm -i ./ -o ./github-pages | tee './build-html.log'
           echo "exitcode=$?" >> $GITHUB_OUTPUT
         shell: bash
 
@@ -42,16 +42,16 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ./github-docs
-          key: ${{ runner.os }}-github-docs-${{ github.sha }}
+          key: ${{ runner.os }}-github-pages-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-github-docs-
+            ${{ runner.os }}-github-pages-
 
       - name: Upload build artifacts
         if: steps.cache-github-pages.outputs.cache-hit != 'true'
         uses: actions/upload-artifact@v3
         with:
           include-hidden-files: true
-          path: ./github-docs
+          path: ./github-pages
           retention-days: 1
 
       - name: Exit
