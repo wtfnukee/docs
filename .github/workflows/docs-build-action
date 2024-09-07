@@ -1,0 +1,69 @@
+name: docs-build-action
+description: Build documentation
+
+inputs:
+  revision:
+    default: "default_revision"
+  src-root:
+    default: "./"
+  lint-root:
+    default: "./_docs-lint"
+  build-root:
+    default: "./_docs-build"
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18
+    - run: npm i @diplodoc/cli -g
+      shell: bash
+
+    - name: Build md2html
+      id: build-md2html
+      run: |
+        set +e
+        set -o pipefail
+
+        yfm -i ${{ inputs.src-root }} -o ${{ inputs.lint-root }} ${{ steps.get-pdf-params.outputs.pdf_args }} | tee './build-html.log'
+
+        echo "exitcode=$?" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Save inputs
+      run: |
+        mkdir -p ./inputs
+        echo ${{ inputs.revision }} > ./inputs/revision
+        echo ${{ github.event.number }} > ./inputs/pr-number
+      shell: bash
+    - name: Upload inputs
+      uses: actions/upload-artifact@v3
+      with:
+        name: inputs
+        path: inputs/
+        retention-days: 1
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-output-md
+        include-hidden-files: true
+        path: ${{ inputs.build-root }}
+        retention-days: 1
+    - name: Upload build log
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-log-html
+        path: ./build-html.log
+        retention-days: 1
+    - name: Exit
+      run: |
+        exitcode=${{ steps.build-md2html.outputs.exitcode }}
+
+        if [ "$exitcode" -eq 0 ]; then
+            echo "Build exited successfully."
+        else
+          echo "Build exited with an error. Exit code: $exitcode"
+          exit $exitcode
+        fi
+      shell: bash
