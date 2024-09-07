@@ -35,7 +35,7 @@ jobs:
           set +e
           set -o pipefail
 
-          yfm -i ./docs -o ./_docs-lint | tee './build-html.log'
+          yfm -i ./ -o ./_docs-lint | tee './build-html.log'
 
           echo "exitcode=$?" >> $GITHUB_OUTPUT
         shell: bash
