@@ -47,13 +47,13 @@ jobs:
           echo ${{ github.event.number }} > ./inputs/pr-number
         shell: bash
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-output-md
-          include-hidden-files: true
-          path: ./_docs-lint
-          retention-days: 1
+      # - name: Upload build artifacts
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: build-output-md
+      #     include-hidden-files: true
+      #     path: ./_docs-lint
+      #     retention-days: 1
 
       - name: Upload build log
         uses: actions/upload-artifact@v3
