@@ -34,38 +34,29 @@ jobs:
         run: |
           set +e
           set -o pipefail
-
-          yfm -i ./ -o ./_docs-lint | tee './build-html.log'
-
+          yfm -i ./ -o ./github-docs | tee './build-html.log'
           echo "exitcode=$?" >> $GITHUB_OUTPUT
         shell: bash
 
-      - name: Save inputs
-        run: |
-          mkdir -p ./inputs
-          echo ${{ github.sha }} > ./inputs/revision
-          echo ${{ github.event.number }} > ./inputs/pr-number
-        shell: bash
+      - name: Cache GitHub Pages Artifact
+        uses: actions/cache@v3
+        with:
+          path: ./github-docs
+          key: ${{ runner.os }}-github-docs-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-github-docs-
 
       - name: Upload build artifacts
+        if: steps.cache-github-pages.outputs.cache-hit != 'true'
         uses: actions/upload-artifact@v3
         with:
-          name: github-pages
           include-hidden-files: true
-          path: ./_docs-lint
-          retention-days: 1
-
-      - name: Upload build log
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-log-html
-          path: ./build-html.log
+          path: ./github-docs
           retention-days: 1
 
       - name: Exit
         run: |
           exitcode=${{ steps.build-md2html.outputs.exitcode }}
-
           if [ "$exitcode" -eq 0 ]; then
               echo "Build exited successfully."
           else
