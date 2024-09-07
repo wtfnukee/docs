@@ -17,6 +17,9 @@ concurrency:
 
 jobs:
   build:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -38,22 +41,6 @@ jobs:
           echo "exitcode=$?" >> $GITHUB_OUTPUT
         shell: bash
 
-      - name: Cache GitHub Pages Artifact
-        uses: actions/cache@v3
-        with:
-          path: ./github-docs
-          key: ${{ runner.os }}-github-pages-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-github-pages-
-
-      - name: Upload build artifacts
-        if: steps.cache-github-pages.outputs.cache-hit != 'true'
-        uses: actions/upload-artifact@v3
-        with:
-          include-hidden-files: true
-          path: ./github-pages
-          retention-days: 1
-
       - name: Exit
         run: |
           exitcode=${{ steps.build-md2html.outputs.exitcode }}
@@ -65,22 +52,9 @@ jobs:
           fi
         shell: bash
 
-  deploy:
-    needs: build
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: github-pages
-          path: '.'
-
+  
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
