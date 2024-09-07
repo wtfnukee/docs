@@ -84,16 +84,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download build artifacts
-        uses: actions/download-artifact@v3
+      # - name: Download build artifacts
+      #   uses: actions/download-artifact@v3
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: './_docs-lint'
 
       - name: Deploy to GitHub Pages
         id: deployment
