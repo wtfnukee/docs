@@ -61,7 +61,7 @@ jobs:
           retention-days: 1
   
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v4
 
       - name: Deploy to GitHub Pages
         id: deployment
