@@ -53,7 +53,7 @@ jobs:
         shell: bash
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-pages-artifact@v3
         with:
           name: github-pages
           include-hidden-files: true
@@ -61,7 +61,7 @@ jobs:
           retention-days: 1
   
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
 
       - name: Deploy to GitHub Pages
         id: deployment
